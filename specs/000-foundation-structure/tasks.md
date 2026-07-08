@@ -58,9 +58,9 @@ Django Modular Monolith (plan.md Structure Decision): `config/`(설정),
 
 **Purpose**: uv 프로젝트·Django 설정 골격. 관찰 가능한 동작 없음(FR-007 예외).
 
-- [ ] T001 uv 프로젝트 초기화 — `pyproject.toml`(project: Python 3.12; deps: Django 5.2 LTS; dev-deps: tach·pytest·pytest-django·ruff), `.python-version`(3.12), `uv.lock` 생성(`uv sync`), `.gitignore`(Python/Django/uv 표준)
-- [ ] T002 pyproject.toml에 도구 설정 추가 — ruff(`E,F,B,C4,W,I,DJ`, line-length 100), pytest(`DJANGO_SETTINGS_MODULE=config.settings.ci`, testpaths=`tests`) (T001과 같은 파일 — T001 이후)
-- [ ] T003 Django config 스캐폴딩 — `manage.py`, `config/__init__.py`, `config/settings/{__init__,base,local,ci}.py`(base→환경별 계층; prod/sandbox 생성 금지 — YAGNI), `config/urls.py`(빈 라우팅 골격), `config/wsgi.py`, `config/asgi.py`
+- [X] T001 uv 프로젝트 초기화 — `pyproject.toml`(project: Python 3.12; deps: Django 5.2 LTS; dev-deps: tach·pytest·pytest-django·ruff), `.python-version`(3.12), `uv.lock` 생성(`uv sync`), `.gitignore`(Python/Django/uv 표준)
+- [X] T002 pyproject.toml에 도구 설정 추가 — ruff(`E,F,B,C4,W,I,DJ`, line-length 100), pytest(`DJANGO_SETTINGS_MODULE=config.settings.ci`, testpaths=`tests`) (T001과 같은 파일 — T001 이후)
+- [X] T003 Django config 스캐폴딩 — `manage.py`, `config/__init__.py`, `config/settings/{__init__,base,local,ci}.py`(base→환경별 계층; prod/sandbox 생성 금지 — YAGNI), `config/urls.py`(빈 라우팅 골격), `config/wsgi.py`, `config/asgi.py`
 
 **Checkpoint**: `uv run python -c "import django"` 성공.
 
@@ -70,9 +70,9 @@ Django Modular Monolith (plan.md Structure Decision): `config/`(설정),
 
 **Purpose**: US1·US2가 올라설 최소 구조. 도메인 모델·primitive 정의 0(BR-4).
 
-- [ ] T004 [P] 경계 적합성 픽스처 앱 A·B 스캐폴딩 — `apps/__init__.py`, `apps/conformance_a/{__init__.py,apps.py,services.py}`, `apps/conformance_b/{__init__.py,apps.py,services.py,internal.py}`. 각 `services.py`는 자명한 공개 함수 1개(자기완결 — cross-app 호출 구현은 T011). `internal.py`는 자명한 비공개 함수 1개 — 경계 테스트의 **내부 모듈 위반-샘플 표적**(Django 구성 파일 `apps.py`를 내부 모듈 샘플로 쓰지 않는다). `models.py`·`migrations/` 만들지 않음(SC-003)
-- [ ] T005 [P] 공유 커널 빈 패키지 — `shared_kernel/__init__.py` (public symbol 0, SC-003; 내용물은 Spec 001)
-- [ ] T006 `config/settings/base.py` INSTALLED_APPS에 픽스처 앱 등록 (T003·T004 이후)
+- [X] T004 [P] 경계 적합성 픽스처 앱 A·B 스캐폴딩 — `apps/__init__.py`, `apps/conformance_a/{__init__.py,apps.py,services.py}`, `apps/conformance_b/{__init__.py,apps.py,services.py,internal.py}`. 각 `services.py`는 자명한 공개 함수 1개(자기완결 — cross-app 호출 구현은 T011). `internal.py`는 자명한 비공개 함수 1개 — 경계 테스트의 **내부 모듈 위반-샘플 표적**(Django 구성 파일 `apps.py`를 내부 모듈 샘플로 쓰지 않는다). `models.py`·`migrations/` 만들지 않음(SC-003)
+- [X] T005 [P] 공유 커널 빈 패키지 — `shared_kernel/__init__.py` (public symbol 0, SC-003; 내용물은 Spec 001)
+- [X] T006 `config/settings/base.py` INSTALLED_APPS에 픽스처 앱 등록 (T003·T004 이후)
 
 **Checkpoint**: `uv run python manage.py check` 통과 — user story 착수 가능.
 
@@ -88,17 +88,17 @@ Django Modular Monolith (plan.md Structure Decision): `config/`(설정),
 
 ### Tests for User Story 1 (write FIRST — RED 확인 후 구현) ⚠️
 
-- [ ] T010t [US1] 경계 테스트 스위트 작성 + RED 증거(RED 기준은 상단 **Tests** 절 — 위반이 리포트되지 않음/양성 케이스 미통과여야 하며, 설정 부재 에러의 exit ≠ 0은 차단 증거가 아니다):
+- [X] T010t [US1] 경계 테스트 스위트 작성 + RED 증거(RED 기준은 상단 **Tests** 절 — 위반이 리포트되지 않음/양성 케이스 미통과여야 하며, 설정 부재 에러의 exit ≠ 0은 차단 증거가 아니다):
   (a) `tests/boundary/test_boundary_contract.py` — 허용 edge(`conformance_a → conformance_b.services`) 통과 / A→`conformance_b.internal` 직접 import 위반 차단 / **near-miss 공개 표면 차단**: 임시 복제본에 `apps/conformance_b/services_private.py` 주입 후 A에서 import 시 위반 리포트(expose가 비이스케이프 `services.*`면 통과해버림 — 재현 확인 2026-07-08, AC-9) / `shared_kernel`→픽스처 앱 역의존 차단. 위반 케이스는 전부 임시 복제본에 주입하고 exit code + **위반 경로가 리포트에 식별됨**을 단언(AC-1·AC-2·AC-3);
   (b) `tests/boundary/test_boundary_meta.py` — 임시 복제본에 알려진 위반 주입 후 `tach check` exit ≠ 0 + 해당 위반이 리포트에 존재함을 단언(거짓-통과 방지, AC-4);
   (c) `tests/boundary/test_module_registration.py` — **`apps/` 바로 아래의 모든 패키지·모듈(`__init__.py` 제외)**이 tach 모듈로 등록되었는지 파일시스템 대조(향후 `apps/<domain>/domain/` 같은 중첩 하위 패키지는 부모 모듈 경계 소속이라 대상 아님) + `root_module = "forbid"` 설정 존재 + exclude 목록이 `apps`·`config`·`shared_kernel`(하위 포함)을 건드리지 않음(과잉 exclude로 인한 검사 표면 침식 방지) 대조(R-BC-4, AC-6·AC-7)
-- [ ] T011t [P] [US1] `tests/conformance/test_public_interface.py` 작성(RED) — 앱 A가 앱 B의 `services` 공개 함수를 경유해 호출 성공 + 픽스처 내 cross-app 내부 import 0건 정적 검사(SC-005, AC-SI-1·AC-SI-2)
-- [ ] T012 [P] [US1] `tests/conformance/test_fixture_scope.py` 작성 — 픽스처 앱 `models.Model` subclass 0·`migrations` 패키지 0·primitive 정의 0, `shared_kernel` public symbol 0을 기계 단언(SC-003). 제약 고정(특성화) 테스트로 처음부터 통과 가능(XVII)
-- [ ] T013t [P] [US1] `tests/ci/test_ci_contract.py` 작성 + RED 증거(ci.yml·CODEOWNERS 부재) — `.github/workflows/ci.yml`을 파싱해 (1) trigger에 `pull_request` 포함, (2) 계약 고정 잡 id **`quality-gate`** 존재, (3) 그 잡 안에 `tach check` 스텝 → pytest 스텝 순서, (4) 잡·두 스텝에 `continue-on-error`·조건부 `if:` 부재를 단언하고, (5) `.github/CODEOWNERS`가 존재하며 `/.github/workflows/` 소유 규칙을 포함함을 단언(C-5, AC-8)
+- [X] T011t [P] [US1] `tests/conformance/test_public_interface.py` 작성(RED) — 앱 A가 앱 B의 `services` 공개 함수를 경유해 호출 성공 + 픽스처 내 cross-app 내부 import 0건 정적 검사(SC-005, AC-SI-1·AC-SI-2)
+- [X] T012 [P] [US1] `tests/conformance/test_fixture_scope.py` 작성 — 픽스처 앱 `models.Model` subclass 0·`migrations` 패키지 0·primitive 정의 0, `shared_kernel` public symbol 0을 기계 단언(SC-003). 제약 고정(특성화) 테스트로 처음부터 통과 가능(XVII)
+- [X] T013t [P] [US1] `tests/ci/test_ci_contract.py` 작성 + RED 증거(ci.yml·CODEOWNERS 부재) — `.github/workflows/ci.yml`을 파싱해 (1) trigger에 `pull_request` 포함, (2) 계약 고정 잡 id **`quality-gate`** 존재, (3) 그 잡 안에 `tach check` 스텝 → pytest 스텝 순서, (4) 잡·두 스텝에 `continue-on-error`·조건부 `if:` 부재를 단언하고, (5) `.github/CODEOWNERS`가 존재하며 `/.github/workflows/` 소유 규칙을 포함함을 단언(C-5, AC-8)
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] `tach.toml` 경계 계약 작성 (선행: T010t 작성+RED 증거 / 완료 조건: T010t (a)(b)(c) 전부 GREEN):
+- [X] T010 [US1] `tach.toml` 경계 계약 작성 (선행: T010t 작성+RED 증거 / 완료 조건: T010t (a)(b)(c) 전부 GREEN):
   모듈 등록 `apps.conformance_a`(depends_on=`["apps.conformance_b", "shared_kernel"]`)·
   `apps.conformance_b`(depends_on=`["shared_kernel"]`)·`shared_kernel`(depends_on=`[]`,
   BR-3), `[[interfaces]]` expose=`["services", "services\\..*"]`(services-only 공개 표면
@@ -110,10 +110,11 @@ Django Modular Monolith (plan.md Structure Decision): `config/`(설정),
   exclude(경계를 가로질러 검증하는 것이 목적인 비배포 코드 — 과잉 exclude는
   T010t(c)가 차단). `manage.py`는 first-party import가 없어 `<root>` 잔류로 forbid
   위반 없음(research.md R3)
-- [ ] T011 [US1] `apps/conformance_a/services.py`에 `conformance_b.services` 공개 함수를 경유하는 호출 구현 (선행: T011t 작성+RED 증거, T010 완료 / 완료 조건: T011t GREEN — 선언된 edge 위에서만 동작)
-- [ ] T013 [US1] `.github/workflows/ci.yml` 작성 (선행: T013t 작성+RED 증거 / 완료 조건: T013t (1)~(4) GREEN): trigger `on: pull_request`(+ `push: branches [main]`), 단일 필수 잡 id **`quality-gate`**(required status check context로 계약 고정, C-5)에 checkout → uv 설치(Python 3.12) → `uv sync` → `uv run tach check` → `uv run pytest` 순서. 잡·스텝에 `continue-on-error`·조건부 `if:` 금지(silent-skip 방지 C-1, FR-003)
-- [ ] T013b [P] [US1] `.github/CODEOWNERS` 작성 (선행: T013t / 완료 조건: T013t (5) GREEN): `/.github/workflows/ @<저장소 소유자 GitHub 핸들>` — 워크플로 변경 리뷰 게이트의 repo-local 절반(플랫폼 절반인 code-owner review 필수화·핸들 유효성 확인은 T014). C-5 거버넌스 층
+- [X] T011 [US1] `apps/conformance_a/services.py`에 `conformance_b.services` 공개 함수를 경유하는 호출 구현 (선행: T011t 작성+RED 증거, T010 완료 / 완료 조건: T011t GREEN — 선언된 edge 위에서만 동작)
+- [X] T013 [US1] `.github/workflows/ci.yml` 작성 (선행: T013t 작성+RED 증거 / 완료 조건: T013t (1)~(4) GREEN): trigger `on: pull_request`(+ `push: branches [main]`), 단일 필수 잡 id **`quality-gate`**(required status check context로 계약 고정, C-5)에 checkout → uv 설치(Python 3.12) → `uv sync` → `uv run tach check` → `uv run pytest` 순서. 잡·스텝에 `continue-on-error`·조건부 `if:` 금지(silent-skip 방지 C-1, FR-003)
+- [X] T013b [P] [US1] `.github/CODEOWNERS` 작성 (선행: T013t / 완료 조건: T013t (5) GREEN): `/.github/workflows/ @<저장소 소유자 GitHub 핸들>` — 워크플로 변경 리뷰 게이트의 repo-local 절반(플랫폼 절반인 code-owner review 필수화·핸들 유효성 확인은 T014). C-5 거버넌스 층
 - [ ] T014 [US1] 저장소 밖 GitHub 설정 + 완료 증거 기록 (T013·T013b 의존): GitHub 원격 저장소 생성·push(현재 remote 없음) → 브랜치 보호/Ruleset에서 **`quality-gate`** context를 **required status check** 지정(C-2) + code-owner review 필수화(T013b의 CODEOWNERS를 바인딩 — 파일만으로는 무력; 소유자 핸들이 실제 계정인지 확인 포함, C-5 거버넌스 층) → 증거(`gh api repos/.../branches/main/protection` 출력 등)를 `specs/000-foundation-structure/evidence/branch-protection.md`에 기록(C-3)
+  **⏸ 부분 보류(2026-07-08)**: 원격 생성(`kncray/nudgeplace` private)·push·CI 실제 실행(`quality-gate` success) 완료. required check·code-owner review 강제는 Free 플랜 private 제약으로 403(브랜치 보호·Ruleset 모두 시도·기록) — 해제 조건(Pro 업그레이드 또는 public 전환)과 재개 절차는 [evidence/branch-protection.md](./evidence/branch-protection.md). 해제 전까지 Spec 000 완료 선언 보류.
 
 **Checkpoint**: US1 완결 — quickstart 시나리오 1~5·9·10 GREEN, 시나리오 8 증거 존재.
 
@@ -129,13 +130,13 @@ Django Modular Monolith (plan.md Structure Decision): `config/`(설정),
 
 ### Tests for User Story 2 (write FIRST — RED 확인 후 구현) ⚠️
 
-- [ ] T015t [US2] `tests/docs/test_docs_ownership.py` 작성 + RED 증거(ADR 부재): `docs/adr/0001~0003` 존재 + 각 ADR에 근거·대안·트레이드오프 섹션 존재 + ADR 0002에 state-model·glossary 정식 경로와 소유 규칙(최초 생성 주체 = 첫 상태/도메인 용어 도입 기능, 로드맵상 P1) 기록 + `docs/domain/state-model.md`·`docs/domain/glossary.md` **부존재** 단언(US2 #1·#2, SC-004, BR-5)
+- [X] T015t [US2] `tests/docs/test_docs_ownership.py` 작성 + RED 증거(ADR 부재): `docs/adr/0001~0003` 존재 + 각 ADR에 근거·대안·트레이드오프 섹션 존재 + ADR 0002에 state-model·glossary 정식 경로와 소유 규칙(최초 생성 주체 = 첫 상태/도메인 용어 도입 기능, 로드맵상 P1) 기록 + `docs/domain/state-model.md`·`docs/domain/glossary.md` **부존재** 단언(US2 #1·#2, SC-004, BR-5)
 
 ### Implementation for User Story 2 (선행: T015t 작성+RED 증거 / 완료 조건: 셋 완료 시 T015t GREEN)
 
-- [ ] T015a [P] [US2] `docs/adr/0001-modular-monolith.md` — Django 모듈러 모놀리스 채택(MADR: 맥락/결정/대안: 마이크로서비스·비-Django/트레이드오프/진화: 경계 안정+운영 필요 입증 시 서비스 추출, 원칙 VII)
-- [ ] T015b [P] [US2] `docs/adr/0002-boundary-enforcement-tach.md` — 정적 import 경계 기계 강제(Tach: 명시적 edge·services-only interface·`root_module="forbid"`+등록 대조 병행 필수 근거(재현 실험), 대안: import-linter·커스텀 AST·리뷰 관례, 보장 범위: 정적 import 한정 — 우회 경로는 규약·리뷰·P1 판단, 원칙 VIII) **+ 문서 소유 규칙**(`docs/domain/state-model.md`·`glossary.md` 정식 경로, 첫 상태/도메인 용어 도입 기능이 최초 생성 — 빈 문서 선제 생성 금지, FR-006)
-- [ ] T015c [P] [US2] `docs/adr/0003-shared-kernel-unidirectional.md` — 공유 커널 단방향 의존(커널→도메인 역의존 금지, 빈 커널에서 vacuous하지 않도록 픽스처를 도메인 계층으로 등록한 근거, 내용물은 Spec 001, 원칙 VIII/BR-3)
+- [X] T015a [P] [US2] `docs/adr/0001-modular-monolith.md` — Django 모듈러 모놀리스 채택(MADR: 맥락/결정/대안: 마이크로서비스·비-Django/트레이드오프/진화: 경계 안정+운영 필요 입증 시 서비스 추출, 원칙 VII)
+- [X] T015b [P] [US2] `docs/adr/0002-boundary-enforcement-tach.md` — 정적 import 경계 기계 강제(Tach: 명시적 edge·services-only interface·`root_module="forbid"`+등록 대조 병행 필수 근거(재현 실험), 대안: import-linter·커스텀 AST·리뷰 관례, 보장 범위: 정적 import 한정 — 우회 경로는 규약·리뷰·P1 판단, 원칙 VIII) **+ 문서 소유 규칙**(`docs/domain/state-model.md`·`glossary.md` 정식 경로, 첫 상태/도메인 용어 도입 기능이 최초 생성 — 빈 문서 선제 생성 금지, FR-006)
+- [X] T015c [P] [US2] `docs/adr/0003-shared-kernel-unidirectional.md` — 공유 커널 단방향 의존(커널→도메인 역의존 금지, 빈 커널에서 vacuous하지 않도록 픽스처를 도메인 계층으로 등록한 근거, 내용물은 Spec 001, 원칙 VIII/BR-3)
 
 **Checkpoint**: US1·US2 모두 독립 검증 가능 — quickstart 시나리오 6 GREEN.
 
@@ -145,8 +146,8 @@ Django Modular Monolith (plan.md Structure Decision): `config/`(설정),
 
 **Purpose**: 전 시나리오 실행 증거와 품질 마감.
 
-- [ ] T016 quickstart.md 시나리오 1~10 전체 실행, 결과(명령·출력 요약·RED→GREEN 증거)를 `specs/000-foundation-structure/evidence/quickstart-run.md`에 기록 (원칙 XVII: 완료 주장에 관측 근거)
-- [ ] T017 품질 마감 (T016 이후 — SC 매핑이 quickstart 실행 증거를 참조) — `uv run ruff check .` 0건, `uv run python manage.py check` 통과, Success Criteria SC-001~005 최종 대조(각 SC ↔ 통과 테스트/`evidence/quickstart-run.md` 증거 매핑 확인)
+- [X] T016 quickstart.md 시나리오 1~10 전체 실행, 결과(명령·출력 요약·RED→GREEN 증거)를 `specs/000-foundation-structure/evidence/quickstart-run.md`에 기록 (원칙 XVII: 완료 주장에 관측 근거)
+- [X] T017 품질 마감 (T016 이후 — SC 매핑이 quickstart 실행 증거를 참조) — `uv run ruff check .` 0건, `uv run python manage.py check` 통과, Success Criteria SC-001~005 최종 대조(각 SC ↔ 통과 테스트/`evidence/quickstart-run.md` 증거 매핑 확인)
 
 ---
 

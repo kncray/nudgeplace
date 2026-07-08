@@ -1,0 +1,3 @@
+# 워크플로 변경 리뷰 게이트 — repo-local 절반(boundary-contract C-5).
+# 플랫폼 절반(code-owner review 필수화)은 브랜치 보호 설정(T014)이 담당한다.
+/.github/workflows/ @kncray
