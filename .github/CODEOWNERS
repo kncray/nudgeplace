@@ -1,0 +1,5 @@
+# 워크플로 변경 리뷰 게이트 — repo-local 절반(boundary-contract C-5).
+# 플랫폼 절반(code-owner review 필수화)은 첫 협업자 추가 시 활성화(evidence/branch-protection.md).
+# 이 파일 자체도 소유한다 — 소유 규칙 제거 후 워크플로 변조하는 2단계 우회 방지.
+/.github/workflows/ @kncray
+/.github/CODEOWNERS @kncray

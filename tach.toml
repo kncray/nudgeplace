@@ -1,0 +1,35 @@
+# 도메인 경계 계약 — specs/000-foundation-structure/contracts/boundary-contract.md
+#
+# root_module = "forbid": 미등록(<root>) 코드 ↔ 등록 모듈 간 import 양방향 차단(R-BC-4).
+# 단, 미등록 패키지 간 상호 import는 못 잡으므로 등록 대조 테스트
+# (tests/boundary/test_module_registration.py)가 apps/ 직계 자식 전수 등록을 병행 강제한다.
+#
+# exclude 정책(T010 확정): tests는 경계를 가로질러 검증하는 비배포 코드라 제외.
+# apps·config·shared_kernel은 절대 exclude하지 않는다(검사 표면 침식 — 등록 대조
+# 테스트가 대조). manage.py는 first-party import가 없어 <root> 잔류로 무해.
+source_roots = ["."]
+root_module = "forbid"
+exclude = ["tests", ".venv"]
+
+[[modules]]
+path = "config"                   # composition root — exclude로 빼지 않는다
+depends_on = []                   # INSTALLED_APPS는 문자열 참조(정적 import 없음); urls 배선 시 edge 추가
+
+[[modules]]
+path = "apps.conformance_a"
+depends_on = ["apps.conformance_b", "shared_kernel"]
+
+[[modules]]
+path = "apps.conformance_b"
+depends_on = ["shared_kernel"]
+
+[[modules]]
+path = "shared_kernel"
+depends_on = []                   # 커널→도메인 역의존 금지 (BR-3)
+
+# 공개 표면: 앱은 services 인터페이스만 노출 (R-BC-1, P-SI-1)
+# 점 이스케이프 필수 — "services.*"는 services_private 같은 near-miss를 통과시킨다
+# (재현 확인 2026-07-08, AC-9).
+[[interfaces]]
+expose = ["services", "services\\..*"]
+from = ["apps.conformance_a", "apps.conformance_b"]

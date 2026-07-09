@@ -1,0 +1,25 @@
+# CI 계약(boundary-contract C-1·C-5): 잡 id `quality-gate`는 required status check
+# context로 고정되며, tests/ci/test_ci_contract.py가 trigger·스텝 순서·
+# continue-on-error/조건부 skip 부재를 repo-local로 강제한다.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv (Python 3.12)
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Sync dependencies
+        run: uv sync
+      - name: Boundary check (tach)
+        run: uv run tach check
+      - name: Tests
+        run: uv run pytest

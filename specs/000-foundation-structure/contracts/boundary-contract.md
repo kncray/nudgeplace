@@ -24,6 +24,11 @@
    **`services`**(향후 `events`) 모듈만 공개 표면이며, `models`·기타 내부 모듈로의
    cross-app import는 **차단**된다. → Tach `[[modules]].depends_on`으로 허용 edge를
    열거하고, `[[interfaces]]`로 각 앱의 공개 표면을 `services`로 제한한다.
+   **한계와 보완(AC-10)**: Tach 인터페이스는 선언된 edge 위의 **패키지 루트 import**
+   (`import apps.b`, `from apps import b`)를 잡지 못한다(재현 확인 2026-07-09).
+   그 노출 범위는 대상 `__init__`의 export에 한정되므로, ① AST 적합성 테스트가
+   `apps/` 직계 자식 전수에서 루트 import를 위반으로 차단하고 ② 픽스처 `__init__`
+   export 0 특성화 테스트가 그 전제를 고정한다.
 2. **R-BC-2 (커널 단방향)**: `shared_kernel`은 어떤 `apps.*`도 import할 수 없다
    (도메인→커널만 허용). 커널→도메인 역의존은 **차단**된다(BR-3).
 3. **R-BC-3 (ID 참조 규약, SHOULD)**: 도메인 간 참조는 기본적으로 식별자(ID)로 하고
@@ -82,6 +87,7 @@
 | AC-7 | `apps/*` 하위에 tach 모듈로 등록되지 않은 패키지 존재 | 등록 대조 테스트 **실패** | R-BC-4 |
 | AC-8 | `ci.yml`에서 `tach check` 스텝 제거 | repo-local CI 계약 테스트 **실패** | C-5, FR-003 |
 | AC-9 | 앱 A가 앱 B의 `services_private` 같은 **near-miss 유사명 모듈** import | `tach check` **실패**(공개 표면은 `services` 정확 매치 + `services\..*`만) | R-BC-1, US1 #2 |
+| AC-10 | 앱 A가 앱 B의 **패키지 루트** import(`import apps.b` / `from apps import b`) | AST 적합성 테스트 **실패**(Tach 인터페이스 범위 밖 — 재현 확인 2026-07-09; `__init__` export 0 특성화가 전제 고정) | R-BC-1, SC-005 |
 
 ## 표현 (Tach, 예시 스케치)
 
