@@ -62,15 +62,48 @@ def test_no_silent_skip_escape_hatches():
         assert not step.get("continue-on-error"), f"'{needle}' 스텝에 continue-on-error 금지"
 
 
-def test_codeowners_covers_workflows():
-    """(5) 워크플로 변경 리뷰 게이트의 repo-local 절반 — CODEOWNERS 소유 규칙."""
+def test_check_context_cannot_drift_or_be_spoofed():
+    """required check context(=잡 id)의 표류·위장 금지.
+
+    check run 이름은 잡의 `name:`이 있으면 그것을 따른다 — quality-gate 잡에
+    name 오버라이드가 붙으면 required context가 보고되지 않고(표류), 다른 no-op
+    잡에 `name: quality-gate`가 붙으면 required check가 no-op 성공으로 충족된다(위장).
+    """
+    jobs = load_workflow().get("jobs", {})
+    gate = jobs[REQUIRED_JOB_ID]
+    assert gate.get("name") in (None, REQUIRED_JOB_ID), (
+        "quality-gate 잡의 name 오버라이드 금지(required context 표류)"
+    )
+    impostors = [
+        job_id
+        for job_id, job in jobs.items()
+        if job_id != REQUIRED_JOB_ID and job.get("name") == REQUIRED_JOB_ID
+    ]
+    assert impostors == [], f"quality-gate 이름을 위장한 잡 존재: {impostors}"
+
+
+def _codeowners_rules() -> list[list[str]]:
     assert CODEOWNERS.exists(), ".github/CODEOWNERS 부재(C-5)"
-    rules = [
+    return [
         line.split()
         for line in CODEOWNERS.read_text().splitlines()
         if line.strip() and not line.strip().startswith("#")
     ]
+
+
+def test_codeowners_covers_workflows():
+    """(5) 워크플로 변경 리뷰 게이트의 repo-local 절반 — CODEOWNERS 소유 규칙."""
+    rules = _codeowners_rules()
     workflow_rules = [
         r for r in rules if r[0] == "/.github/workflows/" and len(r) >= 2 and r[1].startswith("@")
     ]
     assert workflow_rules, "/.github/workflows/ 소유 규칙 부재"
+
+
+def test_codeowners_protects_itself():
+    """CODEOWNERS 자체가 무소유면 소유 규칙 제거 → 워크플로 변조의 2단계 우회가 성립한다."""
+    rules = _codeowners_rules()
+    self_rules = [
+        r for r in rules if r[0] == "/.github/CODEOWNERS" and len(r) >= 2 and r[1].startswith("@")
+    ]
+    assert self_rules, "/.github/CODEOWNERS 자기보호 규칙 부재"

@@ -114,6 +114,12 @@ remote: - Required status check "quality-gate" is expected.
 {"required_pull_request_reviews": {"require_code_owner_reviews": true, "required_approving_review_count": 1}}
 ```
 
+### 현재 체인에 대한 CI 증거
+
+히스토리 재작성 이후 체인에서도 CI 성공 확인(2026-07-09): main tip `13ab544`
+push run **success**, 직전 PR run(head `c10ca1c`) **success**, `6fc7bfc` push run
+**success**. (위 2026-07-08 run 기록은 재작성 전 체인의 실행 이력으로 보존.)
+
 ### 운영 영향
 
 이후 main 반영 절차: 브랜치 push → PR → `quality-gate` 성공 → 머지.

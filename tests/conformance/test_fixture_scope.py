@@ -5,6 +5,7 @@
 새 파일이 생기면 이 테스트가 실패해 사람 판단을 강제한다.
 """
 
+import ast
 import pkgutil
 from pathlib import Path
 
@@ -39,6 +40,25 @@ def test_fixture_file_allowlist(app):
     }
     unexpected = files - ALLOWED_FILES[app]
     assert not unexpected, f"픽스처 범위 밖 파일(도메인/primitive 선점 의심): {sorted(unexpected)}"
+
+
+@pytest.mark.parametrize("app", FIXTURE_APPS)
+def test_fixture_init_exports_nothing(app):
+    """픽스처 `__init__`은 어떤 이름도 export하지 않는다(docstring만 허용).
+
+    패키지 루트 import(`import apps.b`)의 노출 범위가 `__init__` export에
+    한정된다는 AC-10 방어의 전제를 특성화로 고정한다 — `__init__` re-export가
+    생기면 이 테스트가 사람 판단을 강제한다.
+    """
+    tree = ast.parse((REPO_ROOT / "apps" / app / "__init__.py").read_text())
+    non_docstring = [
+        n for n in tree.body
+        if not (isinstance(n, ast.Expr) and isinstance(n.value, ast.Constant))
+    ]
+    assert non_docstring == [], (
+        f"apps.{app}/__init__.py에 export 가능 구문 존재: "
+        f"{[type(n).__name__ for n in non_docstring]}"
+    )
 
 
 def test_shared_kernel_is_empty():

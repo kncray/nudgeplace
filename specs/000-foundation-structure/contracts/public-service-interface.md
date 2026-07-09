@@ -11,7 +11,9 @@
    (도메인 이벤트가 생기면 `apps.<domain>.events`도 공개 표면에 추가된다 — Spec 001/이후.)
 2. **P-SI-2**: 다른 앱은 `tach.toml`에 명시된 dependency edge가 있을 때만 호출할 수 있고,
    그 경우에도 오직 `services`(및 `events`)만 import·호출한다. `models`·`internal`·
-   기타 모듈로의 cross-app 접근은 금지된다(경계 계약 R-BC-1이 기계 강제).
+   기타 모듈로의 cross-app 접근은 금지되며(경계 계약 R-BC-1이 기계 강제), **패키지
+   루트 import**(`import apps.<domain>`, `from apps import <domain>`)도 금지된다 —
+   이 형태는 Tach가 잡지 못하므로 AST 적합성 테스트가 강제한다(AC-10).
 3. **P-SI-3**: `services`가 노출하는 함수/타입은 다른 도메인의 ORM 모델 인스턴스가 아니라
    **식별자(ID)·값(DTO)** 을 주고받는 것을 기본으로 한다(직접 FK 지양, SHOULD). 이
    규약의 실증은 실제 도메인 간 참조가 처음 생기는 P1.

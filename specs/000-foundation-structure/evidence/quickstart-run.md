@@ -52,7 +52,7 @@ uv run pytest → 27 passed
 | 5 | 공개 인터페이스 경유 + near-miss | `pytest tests/conformance/test_public_interface.py tests/boundary/test_boundary_contract.py` | ✅ 6 passed (AC-SI-1·AC-SI-2 + AC-9 `services_private` 차단) |
 | 6 | 문서 소유 규칙 | `pytest tests/docs/test_docs_ownership.py` | ✅ 6 passed |
 | 7 | 빈 커널 | `python -c "...dir(shared_kernel)..."` | ✅ `public symbols: []` |
-| 8 | CI required check | repo-local: `pytest tests/ci/test_ci_contract.py` / 플랫폼: 브랜치 보호 | ✅ repo-local 4 passed (잡 id `quality-gate`·trigger·스텝 순서·skip 금지·CODEOWNERS) / 플랫폼 증거: [branch-protection.md](./branch-protection.md) (T014) |
+| 8 | CI required check | repo-local: `pytest tests/ci/test_ci_contract.py` / 플랫폼: 브랜치 보호 | ✅ repo-local passed (잡 id `quality-gate`·trigger·스텝 순서·skip 금지·CODEOWNERS) / **플랫폼 절반 2026-07-09 완료** — 보호 활성 + 미검증 커밋 직접 push GH006 거부 실증: [branch-protection.md](./branch-protection.md) |
 | 9 | 미등록 앱 봉쇄 | `apps/rogue` 주입(등록 없이 내부 import) → 검증 → 제거 | ✅ 등록 대조 테스트 FAILED(AC-7) + `tach check` exit 1 — `Module '<root>' cannot depend on 'apps.conformance_b'`(forbid, AC-6) |
 | 10 | 픽스처 범위 | `pytest tests/conformance/test_fixture_scope.py` | ✅ 7 passed (models 0·migrations 0·파일 allowlist·커널 심볼 0) |
 
