@@ -5,6 +5,7 @@ description = "Nudgeplace — 멀티벤더 커머스 플랫폼 (Django 모듈러
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "django>=5.2,<5.3",
+    "psycopg[binary]>=3.2",
 ]
 
 [dependency-groups]
@@ -28,6 +29,10 @@ line-ending = "auto"
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "C4", "W", "I", "DJ"]
+
+[tool.ruff.lint.per-file-ignores]
+# 마이그레이션은 자동 생성 코드 — 직렬화된 제약·SQL이 길어 E501을 예외로 둔다.
+"**/migrations/*.py" = ["E501"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.ci"

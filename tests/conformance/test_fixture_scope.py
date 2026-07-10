@@ -6,7 +6,6 @@
 """
 
 import ast
-import pkgutil
 from pathlib import Path
 
 import pytest
@@ -58,11 +57,8 @@ def test_fixture_init_exports_nothing(app):
     )
 
 
-def test_shared_kernel_is_empty():
-    """커널 public symbol 0 + 하위 모듈 0 (빈 위치 — 내용물은 Spec 001)."""
-    import shared_kernel
-
-    public = [n for n in dir(shared_kernel) if not n.startswith('_')]
-    assert public == [], f'커널이 public symbol을 노출: {public}'
-    submodules = [m.name for m in pkgutil.iter_modules(shared_kernel.__path__)]
-    assert submodules == [], f'커널에 하위 모듈 존재: {submodules}'
+# Spec 000의 `test_shared_kernel_is_empty`(커널 public symbol 0)는 Spec 001에서
+# 예고된 제약 변경(BR-7)에 따라 제거되었다 — 커널은 이제 다섯 primitive를 노출한다.
+# 후계 계약은 tests/kernel/test_public_surface.py의 공개 표면 특성화(K-12, SC-006)가
+# `__all__`·내부 모듈 정확 집합·신규 프로세스 모델 발견을 네 겹으로 강제한다.
+# 픽스처 앱(conformance_*)의 "models 0·파일 allowlist" 단언은 위에서 그대로 유지된다.

@@ -1,0 +1,17 @@
+# 로컬 PostgreSQL 16 (Spec 001 R1) — 멱등 기록·감사 사실의 첫 영속 요구.
+# 접속 계약: POSTGRES_HOST/PORT/DB/USER/PASSWORD (config/settings/base.py).
+# 아래 자격증명은 로컬 개발 기본값이며 비밀이 아니다 — 운영은 매니지드 PG로 이행.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: nudgeplace
+      POSTGRES_USER: nudgeplace
+      POSTGRES_PASSWORD: nudgeplace
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nudgeplace -d nudgeplace"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

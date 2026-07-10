@@ -11,6 +11,28 @@ on:
 jobs:
   quality-gate:
     runs-on: ubuntu-latest
+    # 접속 계약(config/settings/base.py POSTGRES_*)을 잡 env로 주입 — 로컬
+    # docker-compose 기본값과 동일(비밀 아님). 서비스는 runner의 localhost:5432에 매핑.
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: nudgeplace
+      POSTGRES_USER: nudgeplace
+      POSTGRES_PASSWORD: nudgeplace
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: nudgeplace
+          POSTGRES_USER: nudgeplace
+          POSTGRES_PASSWORD: nudgeplace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nudgeplace -d nudgeplace"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - name: Install uv (Python 3.12)

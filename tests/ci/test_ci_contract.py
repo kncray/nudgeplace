@@ -82,6 +82,37 @@ def test_check_context_cannot_drift_or_be_spoofed():
     assert impostors == [], f'quality-gate 이름을 위장한 잡 존재: {impostors}'
 
 
+POSTGRES_ENV_VARS = {
+    'POSTGRES_HOST',
+    'POSTGRES_PORT',
+    'POSTGRES_DB',
+    'POSTGRES_USER',
+    'POSTGRES_PASSWORD',
+}
+
+
+def test_quality_gate_has_postgres_service():
+    """(6) quality-gate 잡에 postgres 서비스 컨테이너(이미지·healthcheck) 존재(R1).
+
+    멱등·감사 DB 테스트는 실제 PostgreSQL 의미론이 전제다(SC-004 동시성) —
+    서비스 컨테이너 부재 시 pytest가 접속 실패로 죽지만, 드리프트를 계약으로 막는다.
+    """
+    job = quality_gate_job()
+    services = job.get('services', {})
+    assert 'postgres' in services, 'quality-gate 잡에 postgres 서비스 부재(R1)'
+    pg = services['postgres']
+    assert 'postgres' in str(pg.get('image', '')), 'postgres 서비스 이미지 미지정'
+    assert '--health-cmd' in pg.get('options', ''), 'postgres 서비스 healthcheck(--health-cmd) 부재'
+
+
+def test_quality_gate_env_has_postgres_connection_vars():
+    """(7) 잡 env에 POSTGRES_* 접속 변수 존재 — base.py 접속 계약과 동기화."""
+    job = quality_gate_job()
+    env = job.get('env', {})
+    missing = POSTGRES_ENV_VARS - set(env)
+    assert not missing, f'quality-gate 잡 env에 POSTGRES_* 변수 누락: {sorted(missing)}'
+
+
 def _codeowners_rules() -> list[list[str]]:
     assert CODEOWNERS.exists(), '.github/CODEOWNERS 부재(C-5)'
     return [
