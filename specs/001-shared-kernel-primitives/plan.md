@@ -267,4 +267,4 @@ tach 경계 계약은 변경 없이 유지된다: `shared_kernel` depends_on=[](
   0001→0002 의존을 plan/research/data-model/contracts에 반영. 기존 사람 승인은
   이 변경 전 산출물에 대한 것이므로 재승인 전까지 구현 진입 불가.
 - **Previous approval**: [x] Approved to proceed to tasks — _(cray.j, 2026-07-10; tasks-stage amendments 이전)_
-- **Approval** (final approver MUST be a human — Principle XIX): [ ] Re-approved to proceed to implement — _(pending)_
+- **Approval** (final approver MUST be a human — Principle XIX): [x] Re-approved to proceed to implement — _(cray.j, 2026-07-10; tasks-stage amendments 역전파 검토 후 재승인)_
